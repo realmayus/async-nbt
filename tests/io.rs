@@ -47,7 +47,7 @@ fn writing_nbt() {
     };
 
     let mut bytes = Vec::new();
-    write_nbt(&mut bytes, None, &nbt, Flavor::Uncompressed).unwrap();
+    write_nbt(&mut bytes, Some(""), &nbt, Flavor::Uncompressed).unwrap();
 
     let read_nbt = read_nbt(&mut Cursor::new(bytes), Flavor::Uncompressed)
         .unwrap()

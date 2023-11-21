@@ -150,8 +150,8 @@ fn read_tag_body_const<R: Read, const TAG_ID: u8>(reader: &mut R) -> Result<NbtT
     Ok(tag)
 }
 
-/// Writes the given flavor of NBT data to the given writer. If no root name is provided, and empty
-/// string is used.
+/// Writes the given flavor of NBT data to the given writer. If no root name is provided, the string
+/// is omitted entirely (this is required since 1.20.2).
 pub fn write_nbt<W: Write>(
     writer: &mut W,
     root_name: Option<&str>,
@@ -187,7 +187,9 @@ where
 {
     // Compound ID
     raw::write_u8(writer, 0xA)?;
-    raw::write_string(writer, root_name.unwrap_or(""))?;
+    if let Some(root_name) = root_name {
+        raw::write_string(writer, root_name)?;
+    }
     for (name, tag) in root.inner() {
         raw::write_u8(writer, raw::id_for_tag(Some(tag)))?;
         raw::write_string(writer, name)?;
