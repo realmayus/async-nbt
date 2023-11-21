@@ -30,17 +30,18 @@ pub enum Flavor {
 pub fn read_nbt<R: Read>(
     reader: &mut R,
     flavor: Flavor,
-) -> Result<(NbtCompound, String), NbtIoError> {
+    skip_root_name: bool,
+) -> Result<(NbtCompound, Option<String>), NbtIoError> {
     match flavor {
-        Flavor::Uncompressed => read_nbt_uncompressed(reader),
+        Flavor::Uncompressed => read_nbt_uncompressed(reader, skip_root_name),
         Flavor::ZlibCompressed | Flavor::ZlibCompressedWith(_) =>
-            read_nbt_uncompressed(&mut ZlibDecoder::new(reader)),
+            read_nbt_uncompressed(&mut ZlibDecoder::new(reader), skip_root_name),
         Flavor::GzCompressed | Flavor::GzCompressedWith(_) =>
-            read_nbt_uncompressed(&mut GzDecoder::new(reader)),
+            read_nbt_uncompressed(&mut GzDecoder::new(reader), skip_root_name),
     }
 }
 
-fn read_nbt_uncompressed<R: Read>(reader: &mut R) -> Result<(NbtCompound, String), NbtIoError> {
+fn read_nbt_uncompressed<R: Read>(reader: &mut R, skip_root_name: bool) -> Result<(NbtCompound, Option<String>), NbtIoError> {
     let root_id = raw::read_u8(reader)?;
     if root_id != 0xA {
         return Err(NbtIoError::TagTypeMismatch {
@@ -48,8 +49,12 @@ fn read_nbt_uncompressed<R: Read>(reader: &mut R) -> Result<(NbtCompound, String
             found: root_id,
         });
     }
+    let root_name = if !skip_root_name {
+         Some(raw::read_string(reader)?)
+    } else {
+        None
+    };
 
-    let root_name = raw::read_string(reader)?;
     match read_tag_body_const::<_, 0xA>(reader) {
         Ok(NbtTag::Compound(compound)) => Ok((compound, root_name)),
         Err(e) => Err(e),
@@ -160,7 +165,7 @@ pub fn write_nbt<W: Write>(
 ) -> Result<(), NbtIoError> {
     let (mode, compression) = match flavor {
         Flavor::Uncompressed => {
-            return write_nbt_uncompressed(writer, root_name, root);
+            return  write_nbt_uncompressed(writer, root_name, root);
         }
         Flavor::ZlibCompressed => (2, Compression::default()),
         Flavor::ZlibCompressedWith(compression) => (2, compression),
