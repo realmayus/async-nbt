@@ -20,7 +20,7 @@ async fn main() -> Result<(), NbtIoError> {
     let mut vec = Vec::new();
 
     // You can also write nbt to anything that implements std::io::Write
-    write_nbt(&mut vec, None, &nbt, Flavor::Uncompressed)?;
+    write_nbt(&mut vec, None, &nbt, Flavor::Uncompressed).await?;
 
     println!("bytes: {:02X?}", vec);
 
