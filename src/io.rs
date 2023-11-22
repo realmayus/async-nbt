@@ -51,7 +51,7 @@ async fn read_nbt_uncompressed<R: AsyncRead + Unpin + Send>(reader: &mut R, skip
         });
     }
     let root_name = if !skip_root_name {
-         Some(raw::read_string(reader).await?)
+        Some(raw::read_string(reader).await?)
     } else {
         None
     };
@@ -89,7 +89,7 @@ async fn read_tag_body_const<R: AsyncRead + Unpin + Send, const TAG_ID: u8>(read
         0x7 => {
             let len = raw::read_i32(reader).await? as usize;
             let mut array = Vec::with_capacity(len);
-            for _ in 0 .. len {
+            for _ in 0..len {
                 array.push(raw::read_i8(reader).await?);
             }
             NbtTag::ByteArray(array)
@@ -118,7 +118,7 @@ async fn read_tag_body_const<R: AsyncRead + Unpin + Send, const TAG_ID: u8>(read
                                 for _ in 0 .. len {
                                     list.push(read_tag_body_const::<_, $id>(reader).await?);
                                 }
-                            },
+                            }
                         )*
                         _ => return Err(NbtIoError::InvalidTagId(tag_id))
                     }
@@ -157,6 +157,64 @@ async fn read_tag_body_const<R: AsyncRead + Unpin + Send, const TAG_ID: u8>(read
     Ok(tag)
 }
 
+pub fn size(root: &NbtCompound, flavor: Flavor, root_name: Option<String>) -> Result<(usize), NbtIoError> {
+    match flavor {
+        Flavor::Uncompressed => size_nbt_uncompressed(root, root_name),
+        _ => Err(NbtIoError::Custom(Box::from("Only uncompressed NBT is supported at this time due to async limitations")))
+    }
+}
+
+fn size_nbt_uncompressed(root: &NbtCompound, root_name: Option<String>) -> Result<(usize), NbtIoError> {
+    let mut size = 1; // root id
+    if let Some(root_name) = root_name {
+        size += raw::size_string(root_name.as_str());
+    }
+
+    for (name, tag) in root.inner() {
+        size += 1; // tag id
+        raw::size_string(name);
+        size_tag_body(tag);
+    }
+
+    size += 1; // TAG_End
+    Ok(size)
+}
+
+fn size_tag_body(tag: &NbtTag) -> usize {
+    match tag {
+        &NbtTag::Byte(value) => 1,
+        &NbtTag::Short(value) => 2,
+        &NbtTag::Int(value) => 4,
+        &NbtTag::Long(value) => 8,
+        &NbtTag::Float(value) => 4,
+        &NbtTag::Double(value) => 8,
+        NbtTag::ByteArray(value) => {
+            4 // length
+                + 1 * value.len() // bytes
+        }
+        NbtTag::String(value) => raw::size_string(value),
+        NbtTag::List(value) =>
+        1 // list type
+        + 4 // length
+        + value.as_ref().iter().map(size_tag_body).sum::<usize>(),
+        NbtTag::Compound(value) => {
+            value.inner().iter().map(|(name, tag)| {
+                1 // tag id
+                    + raw::size_string(name) // name
+                    + size_tag_body(tag) // tag body
+            }).sum::<usize>() + 1 // TAG_End
+        }
+        NbtTag::IntArray(value) => {
+            4 // length
+                + 4 * value.len() // ints
+        }
+        NbtTag::LongArray(value) => {
+            4 // length
+                + 8 * value.len() // longs
+        }
+    }
+}
+
 /// Writes the given flavor of NBT data to the given writer. If no root name is provided, the string
 /// is omitted entirely (this is required since 1.20.2).
 pub async fn write_nbt<W: AsyncWrite + Unpin + Send>(
@@ -190,8 +248,8 @@ async fn write_nbt_uncompressed<W>(
     root_name: Option<&str>,
     root: &NbtCompound,
 ) -> Result<(), NbtIoError>
-where
-    W: AsyncWrite + Unpin + Send,
+    where
+        W: AsyncWrite + Unpin + Send,
 {
     // Compound ID
     raw::write_u8(writer, 0xA).await?;
@@ -321,7 +379,7 @@ pub enum NbtIoError {
 #[cfg(feature = "serde")]
 impl serde::ser::Error for NbtIoError {
     fn custom<T>(msg: T) -> Self
-    where T: Display {
+        where T: Display {
         NbtIoError::Custom(msg.to_string().into_boxed_str())
     }
 }
@@ -329,7 +387,7 @@ impl serde::ser::Error for NbtIoError {
 #[cfg(feature = "serde")]
 impl serde::de::Error for NbtIoError {
     fn custom<T>(msg: T) -> Self
-    where T: Display {
+        where T: Display {
         NbtIoError::Custom(msg.to_string().into_boxed_str())
     }
 }

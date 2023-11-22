@@ -152,6 +152,11 @@ pub async fn write_string<W: AsyncWrite + Unpin>(writer: &mut W, string: &str) -
     writer.write_all(&mod_utf8).await
 }
 
+pub fn size_string(string: &str) -> usize {
+    let mod_utf8 = cesu8::to_java_cesu8(string);
+    2 + mod_utf8.len()
+}
+
 #[inline]
 pub fn cast_byte_buf_to_signed(buf: Vec<u8>) -> Vec<i8> {
     let mut me = ManuallyDrop::new(buf);
