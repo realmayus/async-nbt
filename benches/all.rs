@@ -4,14 +4,14 @@
 
 extern crate criterion;
 extern crate nbt;
-extern crate quartz_nbt;
+extern crate async_nbt;
 extern crate serde;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, SamplingMode, Throughput};
 use fastnbt::{from_bytes, stream::Parser, ByteArray, LongArray};
 use flate2::read::GzDecoder;
 use nbt::{de::from_gzip_reader, from_reader, ser::to_writer};
-use quartz_nbt::{
+use async_nbt::{
     io::{read_nbt, write_nbt, Flavor},
     serde::{deserialize_from, deserialize_from_buffer, serialize_into_unchecked},
 };
@@ -114,7 +114,7 @@ where T: DeserializeOwned + Serialize {
     file.seek(SeekFrom::Start(0)).unwrap();
     let nbt_struct: T = deserialize_from(&mut file, Flavor::GzCompressed).unwrap().0;
     file.seek(SeekFrom::Start(0)).unwrap();
-    let nbt_compound = read_nbt(&mut file, Flavor::GzCompressed).unwrap().0;
+    let nbt_compound = read_nbt(&mut file, Flavor::GzCompressed, false).unwrap().0;
     let uncompressed = inflate(&contents);
     let mut uncompressed_src = Cursor::new(&uncompressed[..]);
 
@@ -139,14 +139,14 @@ where T: DeserializeOwned + Serialize {
     group.bench_function("Quartz: Deserialize As Compound (Compressed)", |b| {
         b.iter(|| {
             src.seek(SeekFrom::Start(0)).unwrap();
-            black_box(read_nbt(&mut src, Flavor::GzCompressed).unwrap().0);
+            black_box(read_nbt(&mut src, Flavor::GzCompressed, false).unwrap().0);
         })
     });
     group.bench_function("Quartz: Deserialize As Compound (Uncompressed)", |b| {
         b.iter(|| {
             uncompressed_src.seek(SeekFrom::Start(0)).unwrap();
             black_box(
-                read_nbt(&mut uncompressed_src, Flavor::Uncompressed)
+                read_nbt(&mut uncompressed_src, Flavor::Uncompressed, false)
                     .unwrap()
                     .0,
             );

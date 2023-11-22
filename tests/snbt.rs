@@ -1,7 +1,7 @@
 mod assets;
 use assets::*;
-use quartz_nbt::{snbt, NbtCompound};
-use quartz_nbt_macros::compound;
+use async_nbt::{snbt, NbtCompound};
+use async_nbt::compound;
 
 #[test]
 fn edge_cases() {
@@ -59,7 +59,7 @@ fn number_like_strings() {
         // For manual inspection
         println!("{repr}");
 
-        assert_eq!(quartz_nbt::snbt::parse(&repr).unwrap(), tag);
+        assert_eq!(async_nbt::snbt::parse(&repr).unwrap(), tag);
     }
 
     assert_round_trip_same(compound! { "str": "1" });

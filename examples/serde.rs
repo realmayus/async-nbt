@@ -1,17 +1,18 @@
 #![allow(unused_imports)]
 use std::io::Cursor;
 
-use quartz_nbt::io::{read_nbt, Flavor, NbtIoError};
+use async_nbt::io::{read_nbt, Flavor, NbtIoError};
 
 #[cfg(feature = "serde")]
-use quartz_nbt::serde::{deserialize, serialize};
+use async_nbt::serde::{deserialize, serialize};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use async_nbt::serde::Array;
 
 
 #[cfg(feature = "serde")]
 fn main() -> Result<(), NbtIoError> {
-    use quartz_nbt::serde::Array;
+    use async_nbt::serde::Array;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     struct Item {
@@ -45,7 +46,7 @@ fn main() -> Result<(), NbtIoError> {
     // You can serialize any struct or enum that implements Serialize into nbt
     let nbt_bytes = serialize(&item_1, None, Flavor::Uncompressed)?;
 
-    let nbt = read_nbt(&mut Cursor::new(nbt_bytes.clone()), Flavor::Uncompressed)?.0;
+    let nbt = read_nbt(&mut Cursor::new(nbt_bytes.clone()), Flavor::Uncompressed, false)?.0;
 
     println!("nbt: {}", nbt);
 

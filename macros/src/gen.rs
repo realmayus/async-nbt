@@ -26,7 +26,7 @@ pub fn gen_compound_expr(compound: &Compound) -> TokenStream {
 
     quote! {
         {
-            let mut __compound = ::quartz_nbt::NbtCompound::with_capacity(#capacity);
+            let mut __compound = ::async_nbt::NbtCompound::with_capacity(#capacity);
             #( #inserts )*
             __compound
         }
@@ -40,27 +40,27 @@ impl ToTokens for Value {
             Value::ByteArray(array) => {
                 let iter = array.iter();
                 tokens.extend(quote! {
-                    { ::quartz_nbt::NbtTag::ByteArray(::std::vec![#( (#iter) as i8 ),*]) }
+                    { ::async_nbt::NbtTag::ByteArray(::std::vec![#( (#iter) as i8 ),*]) }
                 })
             }
             Value::IntArray(array) => {
                 let iter = array.iter();
                 tokens.extend(quote! {
-                    { ::quartz_nbt::NbtTag::IntArray(::std::vec![#( (#iter) as i32 ),*]) }
+                    { ::async_nbt::NbtTag::IntArray(::std::vec![#( (#iter) as i32 ),*]) }
                 })
             }
             Value::LongArray(array) => {
                 let iter = array.iter();
                 tokens.extend(quote! {
-                    { ::quartz_nbt::NbtTag::LongArray(::std::vec![#( (#iter) as i64 ),*]) }
+                    { ::async_nbt::NbtTag::LongArray(::std::vec![#( (#iter) as i64 ),*]) }
                 })
             }
             Value::List(list) =>
                 if list.is_empty() {
-                    tokens.extend(quote! { ::quartz_nbt::NbtList::new() })
+                    tokens.extend(quote! { ::async_nbt::NbtList::new() })
                 } else {
                     tokens.extend(quote! {
-                        { ::quartz_nbt::NbtList::from(::std::vec![#list]) }
+                        { ::async_nbt::NbtList::from(::std::vec![#list]) }
                     })
                 },
             Value::Expr(expr) => expr.to_tokens(tokens),

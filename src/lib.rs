@@ -13,7 +13,7 @@ represented through a tree of compounds (hash maps) and lists (vecs) of NBT tags
 ## Creating NBT Data
 
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 let mut compound = NbtCompound::new();
 compound.insert("foo", 123);
 compound.insert("bar", -3.6f32);
@@ -32,8 +32,8 @@ assert!(compound.get::<_, &NbtTag>("list").is_ok());
 ## Reading and Writing NBT
 
 ```
-# use quartz_nbt::*;
-use quartz_nbt::io::{self, Flavor};
+# use async_nbt::*;
+use async_nbt::io::{self, Flavor};
 use std::io::Cursor;
 
 let mut compound = NbtCompound::new();
@@ -43,7 +43,7 @@ compound.insert("bar", -3.6f32);
 let mut binary: Vec<u8> = Vec::new();
 io::write_nbt(&mut binary, Some("root-tag"), &compound, Flavor::Uncompressed);
 
-let read_compound = io::read_nbt(&mut Cursor::new(binary), Flavor::Uncompressed).unwrap();
+let read_compound = io::read_nbt(&mut Cursor::new(binary), Flavor::Uncompressed, false).unwrap();
 assert_eq!(read_compound.1, "root-tag"); // The root tag's name is generally unused
 assert_eq!(read_compound.0, compound);
 ```
@@ -61,7 +61,7 @@ An error querying an [`NbtCompound`] or [`NbtList`] is represented by an [`NbtRe
 which is short for "NBT representation error." See the error's documentation for details.
 
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 use std::convert::TryFrom;
 
 let tag1: NbtTag = vec![1i8, 2, 3].into();
@@ -72,7 +72,7 @@ assert!(i16::try_from(tag2).is_err()); // Type mismatch
 ```
 
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 let mut compound = NbtCompound::new();
 compound.insert("foo", 123);
 compound.insert("bar", -3.6f32);
@@ -97,7 +97,7 @@ All other NBT-compatible types must be stored in an [`NbtList`].
 
 Obtaining the aforementioned special list types can be done through a regular query.
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 let mut compound = NbtCompound::new();
 compound.insert("list", vec![10i32, 20, 30]);
 
@@ -114,7 +114,7 @@ assert_eq!(list.unwrap(), [1i32, 2, 3].as_ref());
 Utility methods are provided for NBT lists to iterate over unpacked values. See
 [`iter_map`](crate::NbtList::iter_map) and [`iter_mut_map`](crate::NbtList::iter_mut_map).
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 let mut list = NbtList::new();
 list.push("abc");
 list.push("ijk");
@@ -133,7 +133,7 @@ assert!(matches!(iter.next(), None));
 NBT lists can be created by cloning data from an iterator (or something which can be
 converted into an iterator) via [`clone_from`](crate::NbtList::clone_from).
 ```
-# use quartz_nbt::*;
+# use async_nbt::*;
 let mut list1 = NbtList::new();
 list1.push("abc");
 list1.push("ijk");
@@ -159,8 +159,8 @@ extension of JSON with stricter types and looser rules regarding string quotatio
 [`snbt`](crate::snbt) module documentation for more details.
 
 ```
-# use quartz_nbt::*;
-use quartz_nbt::snbt;
+# use async_nbt::*;
+use async_nbt::snbt;
 
 let tag: NbtTag = vec![10i8, 15, 20].into();
 assert_eq!(tag.to_snbt(), "[B;10,15,20]");
@@ -197,7 +197,7 @@ mod repr;
 /// ```
 /// # extern crate serde;
 /// # use serde::{Serialize, Deserialize};
-/// use quartz_nbt::{
+/// use async_nbt::{
 ///     io::Flavor,
 ///     serde::{serialize, deserialize}
 /// };
@@ -237,7 +237,7 @@ mod repr;
 /// ```
 /// # extern crate serde;
 /// # use serde::{Serialize, Deserialize};
-/// use quartz_nbt::{
+/// use async_nbt::{
 ///     compound,
 ///     io::{self, Flavor},
 ///     serde::{Array, serialize}
@@ -268,7 +268,7 @@ mod repr;
 ///
 /// assert_eq!(
 ///     repr,
-///     io::read_nbt(&mut Cursor::new(serialized), Flavor::Uncompressed).unwrap().0
+///     io::read_nbt(&mut Cursor::new(serialized), Flavor::Uncompressed, false).unwrap().0
 /// );
 /// ```
 ///
@@ -283,7 +283,7 @@ mod repr;
 /// ```
 /// # extern crate serde;
 /// # use serde::{Serialize, Deserialize};
-/// use quartz_nbt::{
+/// use async_nbt::{
 ///     compound,
 ///     io::{self, Flavor},
 ///     serde::serialize
@@ -343,7 +343,7 @@ mod repr;
 ///
 /// assert_eq!(
 ///     repr,
-///     io::read_nbt(&mut Cursor::new(serialized), Flavor::Uncompressed).unwrap().0
+///     io::read_nbt(&mut Cursor::new(serialized), Flavor::Uncompressed, false).unwrap().0
 /// );
 /// ```
 ///
@@ -362,7 +362,7 @@ mod repr;
 /// ```
 /// # extern crate serde;
 /// # use serde::Deserialize;
-/// use quartz_nbt::{
+/// use async_nbt::{
 ///     compound,
 ///     io::{self, Flavor},
 ///     serde::deserialize_from_buffer
@@ -485,7 +485,7 @@ pub use tag::*;
 /// array type. If it is desireable for the variable to serialize as a tag list, then it should be
 /// wrapped in [`NbtList`]`::from`.
 /// ```
-/// # use quartz_nbt::{NbtCompound, NbtList, compound};
+/// # use async_nbt::{NbtCompound, NbtList, compound};
 /// let product = 87235i32 * 932i32;
 /// let byte_array = vec![0i8, 2, 4];
 /// let tag_list = byte_array.clone();
@@ -508,7 +508,7 @@ pub use tag::*;
 ///
 /// Similar to SNBT, constant specialized array types can be opted-into with a type specifier:
 /// ```
-/// # use quartz_nbt::{NbtTag, compound};
+/// # use async_nbt::{NbtTag, compound};
 /// let compound = compound! {
 ///     "byte_array": [B; 1, 2, 3],
 ///     "int_array": [I; 4, 5, 6],
@@ -533,7 +533,7 @@ pub use tag::*;
 ///
 /// Just like in JSON or SNBT, compounds are enclosed by braces:
 /// ```
-/// # use quartz_nbt::{NbtCompound, NbtList, compound};
+/// # use async_nbt::{NbtCompound, NbtList, compound};
 /// let compound = compound! {
 ///     "nested": {
 ///         "a": [I;],

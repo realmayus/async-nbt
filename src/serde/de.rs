@@ -22,6 +22,7 @@ use std::{
     io::{self, Cursor, ErrorKind, Read},
     marker::PhantomData,
 };
+use tokio::io::AsyncRead;
 
 /// The deserializer type for reading binary NBT data.
 pub struct Deserializer<'a, R, B> {
@@ -29,7 +30,7 @@ pub struct Deserializer<'a, R, B> {
     _buffered: PhantomData<B>,
 }
 
-impl<'a, R: Read> Deserializer<'a, R, Unbuffered> {
+impl<'a, R: AsyncRead> Deserializer<'a, R, Unbuffered> {
     /// Attempts to construct a new deserializer with the given reader. If the data in the reader
     /// does not start with a valid compound tag, an error is returned. Otherwise, the root name
     /// is returned along with the deserializer.
@@ -90,7 +91,7 @@ impl<'de, 'a, 'buffer, R, B> de::Deserializer<'de> for Deserializer<'a, R, B>
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;
@@ -153,7 +154,7 @@ fn drive_visitor_seq_const<'de, 'a, 'buffer, R, V, B, const TAG_ID: u8>(
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     V: Visitor<'de>,
     B: BufferSpecialization<'buffer>,
 {
@@ -191,7 +192,7 @@ fn drive_visitor_seq_tag<'de, 'a, 'buffer, R, V, B>(
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     V: Visitor<'de>,
     B: BufferSpecialization<'buffer>,
 {
@@ -238,7 +239,7 @@ impl<'de, 'a, 'buffer, R, B, const TAG_ID: u8> EnumAccess<'de> for DeserializeEn
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;
@@ -259,7 +260,7 @@ struct DeserializeVariant<'a, R, B, const TAG_ID: u8> {
 
 impl<'a, 'buffer, R, B, const TAG_ID: u8> DeserializeVariant<'a, R, B, TAG_ID>
 where
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     #[inline]
@@ -276,7 +277,7 @@ impl<'de, 'a, 'buffer, R, B, const TAG_ID: u8> VariantAccess<'de>
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;
@@ -328,7 +329,7 @@ struct DeserializeSeq<'a, R, B, const TAG_ID: u8, const LIST_ID: u8> {
 impl<'a, 'buffer, R, B, const TAG_ID: u8, const LIST_ID: u8>
     DeserializeSeq<'a, R, B, TAG_ID, LIST_ID>
 where
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     #[inline]
@@ -347,7 +348,7 @@ impl<'de, 'a, 'buffer, R, B, const TAG_ID: u8, const LIST_ID: u8> SeqAccess<'de>
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;
@@ -418,7 +419,7 @@ struct DeserializeMap<'a, R, B> {
 
 impl<'a, 'buffer, R, B> DeserializeMap<'a, R, B>
 where
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     #[inline]
@@ -457,7 +458,7 @@ impl<'de, 'a, 'buffer, R, B> MapAccess<'de> for DeserializeMap<'a, R, B>
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;
@@ -489,7 +490,7 @@ pub struct DeserializeTag<'a, R, B, const TAG_ID: u8> {
 
 impl<'a, 'buffer, R, B, const TAG_ID: u8> DeserializeTag<'a, R, B, TAG_ID>
 where
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     #[inline]
@@ -506,7 +507,7 @@ impl<'de, 'a, 'buffer, 'b, R, B, const TAG_ID: u8> de::Deserializer<'de>
 where
     'de: 'a,
     'buffer: 'de,
-    R: Read,
+    R: AsyncRead,
     B: BufferSpecialization<'buffer>,
 {
     type Error = NbtIoError;

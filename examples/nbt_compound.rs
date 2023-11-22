@@ -1,4 +1,4 @@
-use quartz_nbt::{compound, NbtCompound, NbtList, NbtTag};
+use async_nbt::{compound, NbtCompound, NbtList, NbtTag};
 
 fn main() {
     // All NbtTags are stored in NbtCompounds

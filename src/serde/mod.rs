@@ -20,6 +20,7 @@ use std::{
     borrow::Cow,
     io::{Cursor, Read, Write},
 };
+use tokio::io::AsyncRead;
 
 /// Serializes the given value as binary NBT data, returning the resulting Vec. The value must
 /// be a struct or non-unit enum variant, else the serializer will return with an error.
@@ -143,7 +144,7 @@ pub fn deserialize<T: DeserializeOwned>(
 ///
 /// The NBT data must start with a compound tag and represent the type `T` correctly, else the
 /// deserializer will return with an error.
-pub fn deserialize_from<R: Read, T: DeserializeOwned>(
+pub fn deserialize_from<R: AsyncRead, T: DeserializeOwned>(
     reader: &mut R,
     flavor: Flavor,
 ) -> Result<(T, String), NbtIoError> {
@@ -156,7 +157,7 @@ pub fn deserialize_from<R: Read, T: DeserializeOwned>(
     }
 }
 
-fn deserialize_from_raw<'de: 'a, 'a, R: Read, T: Deserialize<'de>>(
+fn deserialize_from_raw<'de: 'a, 'a, R: AsyncRead, T: Deserialize<'de>>(
     reader: &'a mut R,
 ) -> Result<(T, String), NbtIoError> {
     let (de, root_name) = Deserializer::new(reader)?;

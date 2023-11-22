@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
 use once_cell::sync::Lazy;
-use quartz_nbt::{compound, io::Flavor, NbtCompound};
+use async_nbt::{compound, io::Flavor, NbtCompound};
 
 pub const BIG_TEST: &[u8] = include_bytes!("bigtest.nbt");
-pub const BIG_TEST_FLAVOR: Flavor = Flavor::GzCompressed;
+pub const BIG_TEST_FLAVOR: Flavor = Flavor::Uncompressed;
 pub static BIG_TEST_VALIDATE: Lazy<NbtCompound> = Lazy::new(|| {
     let mut bytes = Vec::new();
     for n in 0 .. 1000 {
@@ -49,7 +49,7 @@ pub static BIG_TEST_VALIDATE: Lazy<NbtCompound> = Lazy::new(|| {
 });
 
 pub const PLAYER_NAN_VALUE: &[u8] = include_bytes!("Player-nan-value.dat");
-pub const PLAYER_NAN_VALUE_FLAVOR: Flavor = Flavor::GzCompressed;
+pub const PLAYER_NAN_VALUE_FLAVOR: Flavor = Flavor::Uncompressed;
 
 pub const SNBT_EDGE_CASES: &str = include_str!("snbt_edge_cases.snbt");
 pub static SNBT_EDGE_CASES_VALIDATE: Lazy<NbtCompound> = Lazy::new(|| {

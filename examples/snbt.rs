@@ -1,4 +1,4 @@
-use quartz_nbt::{snbt::SnbtError, NbtCompound};
+use async_nbt::{snbt::SnbtError, NbtCompound};
 
 fn main() -> Result<(), SnbtError> {
     // Instead of making a NbtCompound by inserting everything you can use SNBT
