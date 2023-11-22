@@ -172,8 +172,8 @@ fn size_nbt_uncompressed(root: &NbtCompound, root_name: Option<String>) -> Resul
 
     for (name, tag) in root.inner() {
         size += 1; // tag id
-        raw::size_string(name);
-        size_tag_body(tag);
+        size += raw::size_string(name);
+        size += size_tag_body(tag);
     }
 
     size += 1; // TAG_End
